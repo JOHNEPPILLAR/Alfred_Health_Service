@@ -1,0 +1,28 @@
+{
+  "name": "alfred_health_service",
+  "version": "1.0.0",
+  "description": "Health checking Service",
+  "main": "lib/server.js",
+  "scripts": {
+    "start": "node lib/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "JP",
+  "dependencies": {
+    "dateformat": "*",
+    "dotenv": "*",
+    "fs": "*",
+    "request": "*",
+    "request-promise": "*",
+    "restify": "*",
+    "restify-router": "*",
+    "winston": "*",
+    "memwatch-next": "*",
+    "pure-uuid": "*"
+  },
+  "devDependencies": {
+    "eslint": "*",
+    "eslint-config-airbnb-base": "*",
+    "eslint-plugin-import": "*"
+  }
+}
