@@ -3,6 +3,7 @@
  */
 const Skills = require('restify-router').Router;
 const serviceHelper = require('../../lib/helper.js');
+const { Client } = require('pg');
 
 const skill = new Skills();
 
@@ -31,9 +32,13 @@ function ping(req, res, next) {
   const ackJSON = {
     service: process.env.ServiceName,
     reply: 'pong',
+    cpu: serviceHelper.getCpuInfo(),
+    mem: serviceHelper.getMemoryInfo(),
+    os: serviceHelper.getOsInfo(),
+    process: serviceHelper.getProcessInfo(),
   };
 
-  serviceHelper.sendResponse(res, true, ackJSON); // Send response back to caller
+  serviceHelper.sendResponse(res, true, ackJSON);
   next();
 }
 skill.get('/ping', ping);
@@ -47,7 +52,9 @@ skill.get('/ping', ping);
  *   HTTPS/1.1 200 OK
  *   {
  *     sucess: 'true'
- *     data: 'pong'
+ *     data: {
+ *       activeCount: 0
+ *     }
  *   }
  *
  * @apiErrorExample {json} Error-Response:
@@ -59,22 +66,52 @@ skill.get('/ping', ping);
  */
 async function healthCheck(req, res, next) {
   serviceHelper.log('trace', 'healthCheck', 'Health check API called');
+  let activeServices = [];
+  let activeCount = 0;
 
-  // Get list of registered services
+  try {
+    // Get list of registered services
+    const SQL = 'SELECT service_name, ip_address, port FROM services WHERE active';
+    serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
+    await serviceClient.connect(); // Connect to data store
+    const servicesData = await serviceClient.query(SQL);
+    await serviceClient.end(); // Close data store connection
 
+    if (servicesData.rowCount === 0) {
+      serviceHelper.log('trace', 'healthCheck', 'No active services running');
+    }
 
-  // Loop through services and call their health check end point
-  const x = await callAlfredServiceGet(apiURL); // Call xxx halth check service
+    // Loop through services and call their health check end point
+    let apiURL;
+    let healthCheck;
+    servicesData.rows.forEach(async (serviceInfo) => {
+      try {
+        apiURL = callAlfredServiceGet(`http://${serviceInfo.ip_address}:${serviceInfo.port}/ping`);    
+        healthCheck = await callAlfredServiceGet(apiURL);
+        activeCount += 1;
+        activeServices.push(healthCheck);
+        apiURL = null;
+        healthCheck = null;
+      } catch (err) {
+        serviceHelper.log('error', 'healthCheck', err);
+        apiURL = null;
+        healthCheck = null;
+      }
+    });
 
+    const returnJSON = {
+      activeCount,
+      activeServices,
+    };
+  
+    serviceHelper.sendResponse(res, true, returnJSON);
+    next();
 
-  // Send response back to caller
-  const ackJSON = {
-    service: process.env.ServiceName,
-    reply: 'pong',
-  };
-
-  serviceHelper.sendResponse(res, true, ackJSON); // Send response back to caller
-  next();
+  } catch (err) {
+    serviceHelper.log('error', 'healthCheck', err);
+    serviceHelper.sendResponse(res, false, err);
+    next();
+  } 
 }
 skill.get('/healthcheck', healthCheck);
 
