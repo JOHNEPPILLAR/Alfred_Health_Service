@@ -66,10 +66,18 @@ skill.get('/ping', ping);
  */
 async function healthCheck(req, res, next) {
   serviceHelper.log('trace', 'healthCheck', 'Health check API called');
-  let activeServices = [];
+  const activeServices = [];
   let activeCount = 0;
 
   try {
+    const serviceClient = new Client({
+      host: process.env.DataStore,
+      database: 'logs',
+      user: process.env.DataStoreUser,
+      password: process.env.DataStoreUserPassword,
+      port: 5432,
+    });
+
     // Get list of registered services
     const SQL = 'SELECT service_name, ip_address, port FROM services WHERE active';
     serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
@@ -83,19 +91,19 @@ async function healthCheck(req, res, next) {
 
     // Loop through services and call their health check end point
     let apiURL;
-    let healthCheck;
+    let healthCheckData;
     servicesData.rows.forEach(async (serviceInfo) => {
       try {
-        apiURL = callAlfredServiceGet(`http://${serviceInfo.ip_address}:${serviceInfo.port}/ping`);    
-        healthCheck = await callAlfredServiceGet(apiURL);
+        apiURL = `http://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
+        healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
         activeCount += 1;
-        activeServices.push(healthCheck);
+        activeServices.push(healthCheckData);
         apiURL = null;
-        healthCheck = null;
+        healthCheckData = null;
       } catch (err) {
         serviceHelper.log('error', 'healthCheck', err);
         apiURL = null;
-        healthCheck = null;
+        healthCheckData = null;
       }
     });
 
@@ -103,15 +111,14 @@ async function healthCheck(req, res, next) {
       activeCount,
       activeServices,
     };
-  
+
     serviceHelper.sendResponse(res, true, returnJSON);
     next();
-
   } catch (err) {
     serviceHelper.log('error', 'healthCheck', err);
     serviceHelper.sendResponse(res, false, err);
     next();
-  } 
+  }
 }
 skill.get('/healthcheck', healthCheck);
 

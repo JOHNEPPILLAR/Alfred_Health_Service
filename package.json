@@ -19,7 +19,8 @@
     "winston": "*",
     "pure-uuid": "*",
     "ip": "*",
-    "os": "*"
+    "os": "*",
+    "pg": "*"
   },
   "devDependencies": {
     "eslint": "*",
