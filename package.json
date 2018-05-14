@@ -1,7 +1,7 @@
 {
   "name": "alfred_health_service",
   "version": "1.0.0",
-  "description": "Health checking Service",
+  "description": "Alfred Health Checking Service",
   "main": "lib/server.js",
   "scripts": {
     "start": "node lib/index.js",
@@ -17,8 +17,9 @@
     "restify": "*",
     "restify-router": "*",
     "winston": "*",
-    "memwatch-next": "*",
-    "pure-uuid": "*"
+    "pure-uuid": "*",
+    "ip": "*",
+    "os": "*"
   },
   "devDependencies": {
     "eslint": "*",
