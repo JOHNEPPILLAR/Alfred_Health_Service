@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:9
 
 RUN ln -snf /usr/share/zoneinfo/Europe/London /etc/localtime && echo Europe/London > /etc/timezone \
 	&& apt-get -y update \
