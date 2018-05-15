@@ -92,28 +92,37 @@ async function healthCheck(req, res, next) {
     // Loop through services and call their health check end point
     let apiURL;
     let healthCheckData;
+    let loopCounter = servicesData.rowCount;
+
     servicesData.rows.forEach(async (serviceInfo) => {
       try {
-        apiURL = `http://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
+        apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
-        activeCount += 1;
-        activeServices.push(healthCheckData);
+
+        loopCounter -= 1;
+        if (healthCheckData.body.sucess === 'true') {
+          activeServices.push(healthCheckData.body.data);
+          activeCount += 1;
+        }
+
         apiURL = null;
         healthCheckData = null;
+
+        if (loopCounter === 1) {
+          const returnJSON = {
+            activeCount,
+            activeServices,
+          };
+
+          serviceHelper.sendResponse(res, true, returnJSON);
+          next();
+        }
       } catch (err) {
         serviceHelper.log('error', 'healthCheck', err);
         apiURL = null;
         healthCheckData = null;
       }
     });
-
-    const returnJSON = {
-      activeCount,
-      activeServices,
-    };
-
-    serviceHelper.sendResponse(res, true, returnJSON);
-    next();
   } catch (err) {
     serviceHelper.log('error', 'healthCheck', err);
     serviceHelper.sendResponse(res, false, err);
