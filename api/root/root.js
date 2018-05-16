@@ -97,6 +97,7 @@ async function healthCheck(req, res, next) {
     servicesData.rows.forEach(async (serviceInfo) => {
       try {
         apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
+        serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
 
         loopCounter -= 1;
