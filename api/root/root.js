@@ -3,7 +3,6 @@
  */
 const Skills = require('restify-router').Router;
 const serviceHelper = require('../../lib/helper.js');
-const { Client } = require('pg');
 
 const skill = new Skills();
 
@@ -64,71 +63,69 @@ skill.get('/ping', ping);
  *   }
  *
  */
-async function healthCheck(req, res, next) {
+function healthCheck(req, res, next) {
   serviceHelper.log('trace', 'healthCheck', 'Health check API called');
   const activeServices = [];
   let activeCount = 0;
+  let results;
+  let dbClient;
 
-  try {
-    const serviceClient = new Client({
-      host: process.env.DataStore,
-      database: 'logs',
-      user: process.env.DataStoreUser,
-      password: process.env.DataStoreUserPassword,
-      port: 5432,
-    });
+  (async () => {
+    try {
+      const SQL = 'SELECT service_name, ip_address, port FROM services WHERE active';
+      serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
+      dbClient = await global.logDataClient.connect(); // Connect to data store
+      serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
+      results = await dbClient.query(SQL);
+      serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
+      dbClient.release(); // Return data store connection back to pool
 
-    // Get list of registered services
-    const SQL = 'SELECT service_name, ip_address, port FROM services WHERE active';
-    serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
-    await serviceClient.connect(); // Connect to data store
-    const servicesData = await serviceClient.query(SQL);
-    await serviceClient.end(); // Close data store connection
-
-    if (servicesData.rowCount === 0) {
-      serviceHelper.log('trace', 'healthCheck', 'No active services running');
-    }
-
-    // Loop through services and call their health check end point
-    let apiURL;
-    let healthCheckData;
-    let loopCounter = servicesData.rowCount;
-
-    servicesData.rows.forEach(async (serviceInfo) => {
-      try {
-        apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
-        serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
-        healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
-
-        loopCounter -= 1;
-        if (healthCheckData.body.sucess === 'true') {
-          activeServices.push(healthCheckData.body.data);
-          activeCount += 1;
-        }
-
-        apiURL = null;
-        healthCheckData = null;
-
-        if (loopCounter === 1) {
-          const returnJSON = {
-            activeCount,
-            activeServices,
-          };
-
-          serviceHelper.sendResponse(res, true, returnJSON);
-          next();
-        }
-      } catch (err) {
-        serviceHelper.log('error', 'healthCheck', err);
-        apiURL = null;
-        healthCheckData = null;
+      if (results.rowCount === 0) {
+        serviceHelper.log('trace', 'healthCheck', 'No active services running');
       }
-    });
-  } catch (err) {
+
+      // Loop through services and call their health check end point
+      let apiURL;
+      let healthCheckData;
+      let loopCounter = results.rowCount;
+
+      results.rows.forEach(async (serviceInfo) => {
+        try {
+          apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
+          serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
+          healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
+
+          loopCounter -= 1;
+          if (healthCheckData.body.sucess === 'true') {
+            activeServices.push(healthCheckData.body.data);
+            activeCount += 1;
+          }
+
+          apiURL = null;
+          healthCheckData = null;
+
+          if (loopCounter === 1) {
+            const returnJSON = {
+              activeCount,
+              activeServices,
+            };
+
+            serviceHelper.sendResponse(res, true, returnJSON);
+            next();
+          }
+        } catch (err) {
+          serviceHelper.log('error', 'healthCheck', err);
+          apiURL = null;
+          healthCheckData = null;
+        }
+      });
+    } catch (err) {
+      serviceHelper.log('error', 'healthCheck', err);
+    }
+  })().catch((err) => {
     serviceHelper.log('error', 'healthCheck', err);
-    serviceHelper.sendResponse(res, false, err);
-    next();
-  }
+    return false;
+  });
 }
 skill.get('/healthcheck', healthCheck);
 
