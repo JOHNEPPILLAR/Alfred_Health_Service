@@ -78,7 +78,7 @@ function healthCheck(req, res, next) {
       serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
       results = await dbClient.query(SQL);
       serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
-      dbClient.release(); // Return data store connection back to pool
+      await dbClient.release(); // Return data store connection back to pool
 
       if (results.rowCount === 0) {
         serviceHelper.log('trace', 'healthCheck', 'No active services running');
