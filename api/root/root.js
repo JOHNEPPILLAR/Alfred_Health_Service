@@ -69,10 +69,11 @@ function healthCheck(req, res, next) {
   let activeCount = 0;
   let results;
   let dbClient;
+  let SQL;
 
   (async () => {
     try {
-      const SQL = 'SELECT service_name, ip_address, port FROM services WHERE active';
+      SQL = 'SELECT last(service_name, time) as service_name, ip_address, port FROM services WHERE active GROUP BY ip_address, port';
       serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
       dbClient = await global.logDataClient.connect(); // Connect to data store
       serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
@@ -96,7 +97,30 @@ function healthCheck(req, res, next) {
           healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
 
           loopCounter -= 1;
-          if (healthCheckData.body.sucess === 'true') {
+
+          // If error then service is no longer active
+          if (healthCheckData instanceof Error) {
+            serviceHelper.log('trace', 'healthCheck', 'Service is no longer active');
+
+            SQL = 'INSERT INTO services (time, service_name, ip_address, port, active ) VALUES ($1, $2, $3, $4, false)';
+            const SQLValues = [
+              new Date(),
+              serviceInfo.service_name,
+              serviceInfo.ip_address,
+              serviceInfo.port,
+            ];
+
+            serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
+            dbClient = await global.logDataClient.connect(); // Connect to data store
+            serviceHelper.log('trace', 'healthCheck', 'Mark service as inactive');
+            results = await dbClient.query(SQL, SQLValues);
+            serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
+            await dbClient.release(); // Return data store connection back to pool
+
+            if (results.rowCount === 0) {
+              serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
+            }
+          } else if (healthCheckData.body.sucess === 'true') {
             activeServices.push(healthCheckData.body.data);
             activeCount += 1;
           }
