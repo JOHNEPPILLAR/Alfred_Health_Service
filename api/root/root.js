@@ -132,10 +132,11 @@ async function healthCheck(req, res, next) {
           }
         } else {
     console.dir(healthCheckData)
-          if (healthCheckData.body.sucess === 'true') {
-            activeServices.push(healthCheckData.body.data);
-            activeCount += 1;
-          }
+
+    //      if (healthCheckData.body.sucess === 'true') {
+    //        activeServices.push(healthCheckData.body.data);
+    //        activeCount += 1;
+    //      }
 
         apiURL = null;
         healthCheckData = null;
