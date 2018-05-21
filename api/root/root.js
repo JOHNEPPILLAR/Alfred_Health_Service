@@ -101,7 +101,7 @@ async function healthCheck(req, res, next) {
     results.forEach(async (serviceInfo) => {
       try {
         loopCounter -= 1;
-        apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping`;
+        apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
         serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
 
