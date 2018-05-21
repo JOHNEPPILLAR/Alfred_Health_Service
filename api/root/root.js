@@ -131,13 +131,13 @@ async function healthCheck(req, res, next) {
             serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
           }
         } else {
-    console.dir(healthCheckData)
+          console.dir(healthCheckData)
 
     //      if (healthCheckData.body.sucess === 'true') {
     //        activeServices.push(healthCheckData.body.data);
     //        activeCount += 1;
     //      }
-
+        }
         apiURL = null;
         healthCheckData = null;
 
