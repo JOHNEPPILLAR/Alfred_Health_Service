@@ -137,7 +137,7 @@ async function healthCheck(req, res, next) {
         apiURL = null;
         healthCheckData = null;
 
-        if (loopCounter === 1) {
+        if (loopCounter === 0) {
           const returnJSON = {
             activeCount,
             activeServices,
