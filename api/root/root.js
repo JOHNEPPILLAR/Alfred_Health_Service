@@ -86,6 +86,8 @@ async function healthCheck(req, res, next) {
 
     if (results.rowCount === 0) {
       serviceHelper.log('trace', 'healthCheck', 'No active services running');
+      serviceHelper.sendResponse(res, false, 'No active services running');
+      next();
     }
 
     // Loop through services and call their health check end point
