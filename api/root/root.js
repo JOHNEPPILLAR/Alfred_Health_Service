@@ -84,18 +84,18 @@ async function healthCheck(req, res, next) {
       serviceHelper.log('trace', 'healthCheck', 'Data store connection already released');
     }
 
-    if (results.rowCount === 0) {
-      serviceHelper.log('trace', 'healthCheck', 'No active services running');
-      serviceHelper.sendResponse(res, false, 'No active services running');
-      next();
-    }
-
     // Loop through services and call their health check end point
     let apiURL;
     let healthCheckData;
 
     // Filter results so that only active services are processed
     results = results.rows.filter(data => data.active);
+
+    if (results.length === 0) {
+      serviceHelper.log('trace', 'healthCheck', 'No active services running');
+      serviceHelper.sendResponse(res, false, 'No active services running');
+      next();
+    }
 
     let loopCounter = results.length;
     results.forEach(async (serviceInfo) => {
@@ -154,8 +154,6 @@ async function healthCheck(req, res, next) {
     });
   } catch (err) {
     serviceHelper.log('error', 'healthCheck', err);
-    serviceHelper.sendResponse(res, false, err.message);
-    next();
   }
 }
 skill.get('/healthcheck', healthCheck);
