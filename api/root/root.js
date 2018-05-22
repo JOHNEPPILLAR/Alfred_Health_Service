@@ -121,7 +121,7 @@ async function healthCheck(req, res, next) {
         serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
         dbClient = await global.logDataClient.connect(); // Connect to data store
         serviceHelper.log('trace', 'healthCheck', 'Mark service as inactive');
-        // results = await dbClient.query(SQL, SQLValues);
+        results = await dbClient.query(SQL, SQLValues);
         serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
         try {
           await dbClient.release(); // Return data store connection back to pool
