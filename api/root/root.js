@@ -99,61 +99,57 @@ async function healthCheck(req, res, next) {
 
     let loopCounter = results.length;
     results.forEach(async (serviceInfo) => {
+      apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
+      serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
       try {
-        loopCounter -= 1;
-        apiURL = `https://${serviceInfo.ip_address}:${serviceInfo.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
-        serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
+      } finally {
+        serviceHelper.log('trace', 'healthCheck', `Service is no longer active: ${apiURL}`);
+      }
 
-        // If error then service is no longer active
-        if (healthCheckData instanceof Error) {
-          serviceHelper.log('trace', 'healthCheck', 'Service is no longer active');
+      if (healthCheckData instanceof Error) {
+        serviceHelper.log('error', 'healthCheck', healthCheckData.message);
 
-          SQL = 'INSERT INTO services (time, service_name, ip_address, port, active ) VALUES ($1, $2, $3, $4, false)';
-          const SQLValues = [
-            new Date(),
-            serviceInfo.service_name,
-            serviceInfo.ip_address,
-            serviceInfo.port,
-          ];
+        SQL = 'INSERT INTO services (time, service_name, ip_address, port, active ) VALUES ($1, $2, $3, $4, false)';
+        const SQLValues = [
+          new Date(),
+          serviceInfo.service_name,
+          serviceInfo.ip_address,
+          serviceInfo.port,
+        ];
 
-          serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
-          dbClient = await global.logDataClient.connect(); // Connect to data store
-          serviceHelper.log('trace', 'healthCheck', 'Mark service as inactive');
-          // results = await dbClient.query(SQL, SQLValues);
-          serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
-          try {
-            await dbClient.release(); // Return data store connection back to pool
-          } catch (err) {
-            serviceHelper.log('trace', 'healthCheck', 'Data store connection already released');
-          }
-          if (results.rowCount === 0) {
-            serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
-          }
-        } else if (healthCheckData.sucess === 'true') {
-          activeServices.push(healthCheckData.data);
-          activeCount += 1;
+        serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
+        dbClient = await global.logDataClient.connect(); // Connect to data store
+        serviceHelper.log('trace', 'healthCheck', 'Mark service as inactive');
+        // results = await dbClient.query(SQL, SQLValues);
+        serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
+        try {
+          await dbClient.release(); // Return data store connection back to pool
+        } catch (error) {
+          serviceHelper.log('trace', 'healthCheck', 'Data store connection already released');
         }
-        apiURL = null;
-        healthCheckData = null;
-
-        if (loopCounter === 0) {
-          const returnJSON = {
-            activeCount,
-            activeServices,
-          };
-
-          serviceHelper.sendResponse(res, true, returnJSON);
-          next();
+        if (results.rowCount === 0) {
+          serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
         }
-      } catch (err) {
-        serviceHelper.log('error', 'healthCheck', err);
-        apiURL = null;
-        healthCheckData = null;
+      } else if (healthCheckData.sucess === 'true') {
+        activeServices.push(healthCheckData.data);
+        activeCount += 1;
+      }
+
+      loopCounter -= 1;
+      if (loopCounter === 0) {
+        const returnJSON = {
+          activeCount,
+          activeServices,
+        };
+        serviceHelper.sendResponse(res, true, returnJSON);
+        next();
       }
     });
   } catch (err) {
-    serviceHelper.log('error', 'healthCheck', err);
+    serviceHelper.log('trace', 'healthCheck', err);
+    serviceHelper.sendResponse(res, false, err);
+    next();
   }
 }
 skill.get('/healthcheck', healthCheck);
