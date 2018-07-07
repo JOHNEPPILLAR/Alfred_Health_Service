@@ -14,7 +14,7 @@ const skill = new Skills();
  * @apiSuccessExample {json} Success-Response:
  *   HTTPS/1.1 200 OK
  *   {
- *     sucess: 'true'
+ *     success: 'true'
  *     data: 'pong'
  *   }
  *
@@ -50,7 +50,7 @@ skill.get('/ping', ping);
  * @apiSuccessExample {json} Success-Response:
  *   HTTPS/1.1 200 OK
  *   {
- *     sucess: 'true'
+ *     success: 'true'
  *     data: {
  *       activeCount: 0
  *     }
@@ -133,7 +133,7 @@ async function healthCheck(req, res, next) {
         if (results.rowCount === 0) {
           serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
         }
-      } else if (healthCheckData.sucess === 'true') {
+      } else if (healthCheckData.success === 'true') {
         activeServices.push(healthCheckData.data);
         activeCount += 1;
       }
@@ -164,9 +164,9 @@ skill.get('/healthcheck', healthCheck);
  * @apiSuccessExample {json} Success-Response:
  *   HTTPS/1.1 200 OK
  *   {
- *     sucess: 'true'
+ *     success: 'true'
  *     data: {
- *       sucess or filure return message
+ *       success or filure return message
  *     }
  *   }
  *
