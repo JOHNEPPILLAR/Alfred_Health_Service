@@ -12,19 +12,19 @@
     "dateformat": "*",
     "dotenv": "*",
     "fs": "*",
+    "ip": "*",
+    "os": "*",
+    "pg": "*",
+    "pure-uuid": "*",
     "request": "*",
     "request-promise": "*",
     "restify": "*",
     "restify-router": "*",
-    "winston": "*",
-    "pure-uuid": "*",
-    "ip": "*",
-    "os": "*",
-    "pg": "*"
+    "winston": "*"
   },
   "devDependencies": {
-    "eslint": "^4.19.1",
-    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint": "^5.5.0",
+    "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0"
   }
 }
