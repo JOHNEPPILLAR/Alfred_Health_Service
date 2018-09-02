@@ -101,13 +101,14 @@ async function healthCheck(req, res, next) {
     results.forEach(async (serviceInfo) => {
       let ip = serviceInfo.ip_address;
       if (serviceInfo.ip_address.split('.')[1] === '20') ip = '192.168.1.7'; // *HACK* Redirect if docker subnet is from svr 2
-      apiURL = `https://${ip}:${serviceInfo.port}/ping`;
+      apiURL = `https://${ip}:${serviceInfo.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
       serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
       try {
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
       } finally {
-        serviceHelper.log('trace', 'healthCheck', `Service is no longer active: ${apiURL}`);
+        serviceHelper.log('trace', 'healthCheck', `Service: ${serviceInfo.service_name} is not longer running`);
       }
+      serviceHelper.log('error', 'healthCheck', `Returning status:: ${healthCheckData}`);
 
       if (healthCheckData instanceof Error) {
         serviceHelper.log('error', 'healthCheck', healthCheckData.message);
