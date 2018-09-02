@@ -105,10 +105,10 @@ async function healthCheck(req, res, next) {
       serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
       try {
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
-      } finally {
-        serviceHelper.log('trace', 'healthCheck', `Service: ${serviceInfo.service_name} is not longer running`);
+      } catch (err) {
+        serviceHelper.log('error', 'healthCheck', err);
       }
-      serviceHelper.log('error', 'healthCheck', `Returning status was an error: ${healthCheckData instanceof Error}`);
+      serviceHelper.log('trace', 'healthCheck', `Returning status was an error: ${healthCheckData instanceof Error}`);
 
       if (healthCheckData instanceof Error) {
         serviceHelper.log('error', 'healthCheck', healthCheckData.message);
@@ -134,7 +134,7 @@ async function healthCheck(req, res, next) {
         if (results.rowCount === 0) {
           serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
         }
-      } else if (healthCheckData.success === 'true') {
+      } else {
         serviceHelper.log('trace', 'healthCheck', `Service: ${serviceInfo.service_name} working ok`);
         activeServices.push(healthCheckData.data);
         activeCount += 1;
@@ -151,7 +151,7 @@ async function healthCheck(req, res, next) {
       }
     });
   } catch (err) {
-    serviceHelper.log('trace', 'healthCheck', err);
+    serviceHelper.log('error', 'healthCheck', err);
     serviceHelper.sendResponse(res, false, err);
     next();
   }
