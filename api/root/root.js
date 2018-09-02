@@ -108,7 +108,7 @@ async function healthCheck(req, res, next) {
       } finally {
         serviceHelper.log('trace', 'healthCheck', `Service: ${serviceInfo.service_name} is not longer running`);
       }
-      serviceHelper.log('error', 'healthCheck', `Returning status:: ${healthCheckData}`);
+      serviceHelper.log('error', 'healthCheck', `Returning status was an error: ${healthCheckData instanceof Error}`);
 
       if (healthCheckData instanceof Error) {
         serviceHelper.log('error', 'healthCheck', healthCheckData.message);
