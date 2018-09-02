@@ -100,7 +100,7 @@ async function healthCheck(req, res, next) {
     let loopCounter = results.length;
     results.forEach(async (serviceInfo) => {
       let ip = serviceInfo.ip_address;
-      if (serviceInfo.ip_address.split('.')[1] === '20') ip = '192.168.1.7' // *HACK* Redirect if docker subnet is from svr 2
+      if (serviceInfo.ip_address.split('.')[1] === '20') ip = '192.168.1.7'; // *HACK* Redirect if docker subnet is from svr 2
       apiURL = `https://${ip}:${serviceInfo.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
       serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
       try {
@@ -134,6 +134,7 @@ async function healthCheck(req, res, next) {
           serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
         }
       } else if (healthCheckData.success === 'true') {
+        serviceHelper.log('trace', 'healthCheck', `Service: ${serviceInfo.service_name} working ok`);
         activeServices.push(healthCheckData.data);
         activeCount += 1;
       }
