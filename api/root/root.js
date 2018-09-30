@@ -41,6 +41,7 @@ function ping(req, res, next) {
   next();
 }
 skill.get('/ping', ping);
+skill.get('/', ping);
 
 /**
  * @api {get} /healthcheck
