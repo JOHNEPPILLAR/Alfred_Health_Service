@@ -12,13 +12,8 @@ RUN ln -snf /usr/share/zoneinfo/Europe/London /etc/localtime && echo Europe/Lond
     && npm install --quiet \
     && apk del native-deps
 
-#	&& apt-get -y update \
-#	&& apt-get -y upgrade \
-#	&& npm install pm2 -g \
-
 RUN npm install --production
 
-# CMD [ "pm2-runtime", "start", "/home/nodejs/app/pm2.json" ]
 CMD [ "npm", "start" ]
 
-EXPOSE 3981
+EXPOSE 3982
