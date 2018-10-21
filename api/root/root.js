@@ -107,12 +107,12 @@ async function healthCheck(req, res, next) {
       try {
         healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
       } catch (err) {
-        serviceHelper.log('error', 'healthCheck', err);
+        serviceHelper.log('error', 'healthCheck', err.message);
       }
       serviceHelper.log('trace', 'healthCheck', `Returning status was an error: ${healthCheckData instanceof Error}`);
 
       if (healthCheckData instanceof Error) {
-        serviceHelper.log('error', 'healthCheck', healthCheckData.message);
+        serviceHelper.log('info', 'healthCheck', `Service: ${serviceInfo.service_name} being marked as not active`);
 
         SQL = 'INSERT INTO services (time, service_name, ip_address, port, active ) VALUES ($1, $2, $3, $4, false)';
         const SQLValues = [
