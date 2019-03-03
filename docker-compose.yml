@@ -1,0 +1,22 @@
+version: '3.5'
+
+services:
+
+  alfred_health_service:
+    build: .
+    image: alfred_health_service:latest
+    container_name: alfred_health_service
+    restart: always
+    ports:
+      - "3982:3982"
+    extra_hosts:
+      - "alfred_elk_elasticsearch_1:192.168.1.4"
+    hostname: alfred_health_service
+    networks:
+      - alfred
+
+networks:
+
+  alfred:
+    name: alfred
+    driver: bridge

@@ -70,127 +70,83 @@ skill.get('/', ping);
  */
 async function healthCheck(req, res, next) {
   serviceHelper.log('trace', 'healthCheck', 'Health check API called');
+
   const activeServices = [];
+
+  let apiURL;
+  let healthCheckData;
   let activeCount = 0;
-  let results;
-  let dbClient;
-  let SQL;
 
-  try {
-    SQL = 'SELECT last(service_name, time) as service_name, ip_address, port, last(active, time) as active FROM services GROUP BY ip_address, port';
-    serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
-    dbClient = await global.logDataClient.connect(); // Connect to data store
-    serviceHelper.log('trace', 'healthCheck', 'Get list of active services');
-    results = await dbClient.query(SQL);
-    serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
+  const servicesToPing = [
+    {
+      name: 'alfred_iot_battery_service',
+      ip: 'alfred_iot_battery_service',
+      port: 3978,
+    },
+    {
+      name: 'alfred_inkbird_data_collector_service',
+      ip: '192.168.1.175',
+      port: 3978,
+    },
+    {
+      name: 'alfred_flowercare_data_collector_service',
+      ip: '192.168.1.7',
+      port: 3984,
+    },
+    {
+      name: 'alfred_iot_data_collector_service',
+      ip: '192.168.1.7',
+      port: 3981,
+    },
+    {
+      name: 'alfred_hls_service',
+      ip: '192.168.1.7',
+      port: 3982,
+    },
+    {
+      name: 'alfred_scheduler_service',
+      ip: 'alfred_scheduler_service',
+      port: 3978,
+    },
+    {
+      name: 'alfred_lights_service',
+      ip: 'alfred_lights_service',
+      port: 3978,
+    },
+    {
+      name: 'alfred_digital_assistant_service',
+      ip: 'alfred_digital_assistant_service',
+      port: 3981,
+    },
+  ];
+
+  let counter = 0;
+  servicesToPing.forEach(async (service) => {
+    apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
+    serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
     try {
-      await dbClient.release(); // Return data store connection back to pool
+      healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
     } catch (err) {
-      serviceHelper.log('trace', 'healthCheck', 'Data store connection already released');
+      serviceHelper.log('error', 'healthCheck', err.message);
     }
-
-    // Loop through services and call their health check end point
-    let apiURL;
-    let healthCheckData;
-
-    // Filter results so that only active services are processed
-    results = results.rows.filter(data => data.active);
-
-    if (results.length === 0) {
-      serviceHelper.log('trace', 'healthCheck', 'No active services running');
-      serviceHelper.sendResponse(res, false, 'No active services running');
+    if (healthCheckData instanceof Error) {
+      serviceHelper.log('error', 'healthCheck', `Ping service failed: ${service.name}`);
+    } else {
+      serviceHelper.log('trace', 'healthCheck', `Ping service ok: ${service.name}`);
+      activeServices.push(healthCheckData.data);
+      activeCount += 1;
+    }
+    counter += 1;
+    if (counter === servicesToPing.length) {
+      const returnJSON = {
+        activeCount,
+        activeServices,
+      };
+      serviceHelper.sendResponse(res, true, returnJSON);
       next();
     }
-
-    let loopCounter = results.length;
-    results.forEach(async (serviceInfo) => {
-      let ip = serviceInfo.ip_address;
-      if (serviceInfo.ip_address.split('.')[1] === '20') ip = '192.168.1.7'; // *HACK* Redirect if docker subnet is from svr 2
-      apiURL = `https://${ip}:${serviceInfo.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
-      serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
-      try {
-        healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
-      } catch (err) {
-        serviceHelper.log('error', 'healthCheck', err.message);
-      }
-      serviceHelper.log('trace', 'healthCheck', `Returning status was an error: ${healthCheckData instanceof Error}`);
-
-      if (healthCheckData instanceof Error) {
-        serviceHelper.log('info', 'healthCheck', `Service: ${serviceInfo.service_name} being marked as not active`);
-
-        SQL = 'INSERT INTO services (time, service_name, ip_address, port, active ) VALUES ($1, $2, $3, $4, false)';
-        const SQLValues = [
-          new Date(),
-          serviceInfo.service_name,
-          serviceInfo.ip_address,
-          serviceInfo.port,
-        ];
-
-        serviceHelper.log('trace', 'healthCheck', 'Connect to data store connection pool');
-        dbClient = await global.logDataClient.connect(); // Connect to data store
-        serviceHelper.log('trace', 'healthCheck', 'Mark service as inactive');
-        results = await dbClient.query(SQL, SQLValues);
-        serviceHelper.log('trace', 'healthCheck', 'Release the data store connection back to the pool');
-        try {
-          await dbClient.release(); // Return data store connection back to pool
-        } catch (error) {
-          serviceHelper.log('trace', 'healthCheck', 'Data store connection already released');
-        }
-        if (results.rowCount === 0) {
-          serviceHelper.log('trace', 'healthCheck', 'Failed to save data');
-        }
-      } else {
-        serviceHelper.log('trace', 'healthCheck', `Service: ${serviceInfo.service_name} working ok`);
-        activeServices.push(healthCheckData.data);
-        activeCount += 1;
-      }
-
-      loopCounter -= 1;
-      if (loopCounter === 0) {
-        const returnJSON = {
-          activeCount,
-          activeServices,
-        };
-        serviceHelper.sendResponse(res, true, returnJSON);
-        next();
-      }
-    });
-  } catch (err) {
-    serviceHelper.log('error', 'healthCheck', err.message);
-    serviceHelper.sendResponse(res, false, err);
-    next();
-  }
+  });
 }
 skill.get('/healthcheck', healthCheck);
-
-/**
- * @api {get} /reregister
- * @apiName reregister
- * @apiGroup Root
- *
- * @apiSuccessExample {json} Success-Response:
- *   HTTPS/1.1 200 OK
- *   {
- *     success: 'true'
- *     data: {
- *       success or filure return message
- *     }
- *   }
- *
- * @apiErrorExample {json} Error-Response:
- *   HTTPS/1.1 400 Bad Request
- *   {
- *     data: Error message
- *   }
- *
- */
-async function reRegister(req, res, next) {
-  serviceHelper.log('trace', 'reRegister', 'reRegister API called');
-  serviceHelper.log('trace', 'reRegister', 'Attempt to reRegister service');
-  serviceHelper.registerService();
-  serviceHelper.sendResponse(res, false, 'Attempt to reRegister service called');
-  next();
-}
-skill.get('/reregister', reRegister);
 
 module.exports = skill;
