@@ -108,11 +108,11 @@ async function healthCheck(req, res, next) {
       ip: 'alfred_scheduler_service',
       port: 3978,
     },
-    {
-      name: 'alfred_lights_service',
-      ip: 'alfred_lights_service',
-      port: 3978,
-    },
+    //{
+    //  name: 'alfred_lights_service',
+    //  ip: 'alfred_lights_service',
+    //  port: 3978,
+    //},
     {
       name: 'alfred_digital_assistant_service',
       ip: 'alfred_digital_assistant_service',
