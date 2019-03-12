@@ -94,11 +94,6 @@ async function healthCheck(req, res, next) {
       port: 3984,
     },
     {
-      name: 'alfred_iot_data_collector_service',
-      ip: '192.168.1.7',
-      port: 3981,
-    },
-    {
       name: 'alfred_hls_service',
       ip: '192.168.1.7',
       port: 3982,
@@ -117,6 +112,16 @@ async function healthCheck(req, res, next) {
       name: 'alfred_digital_assistant_service',
       ip: 'alfred_digital_assistant_service',
       port: 3981,
+    },
+    {
+      name: 'alfred_netatmo_data_collector_service',
+      ip: 'alfred_netatmo_data_collector_service',
+      port: 3978,
+    },
+    {
+      name: 'alfred_dyson_data_collector_service',
+      ip: 'alfred_dyson_data_collector_service',
+      port: 3978,
     },
   ];
 
