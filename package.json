@@ -20,7 +20,8 @@
     "restify": "latest",
     "restify-router": "latest",
     "pino": "latest",
-    "pino-pretty": "latest"
+    "pino-pretty": "latest",
+    "path": "latest"
   },
   "devDependencies": {
     "eslint": "latest",

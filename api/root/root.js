@@ -30,7 +30,7 @@ const skill = new Skills();
  *
  */
 function ping(req, res, next) {
-  serviceHelper.log('trace', 'ping', 'Ping API called');
+  serviceHelper.log('trace', 'Ping API called');
 
   const ackJSON = {
     service: process.env.ServiceName,
@@ -69,7 +69,7 @@ skill.get('/', ping);
  *
  */
 async function healthCheck(req, res, next) {
-  serviceHelper.log('trace', 'healthCheck', 'Health check API called');
+  serviceHelper.log('trace', 'Health check API called');
 
   const activeServices = [];
 
@@ -123,16 +123,16 @@ async function healthCheck(req, res, next) {
   let counter = 0;
   servicesToPing.forEach(async (service) => {
     apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
-    serviceHelper.log('trace', 'healthCheck', `Calling: ${apiURL}`);
+    serviceHelper.log('trace', `Calling: ${apiURL}`);
     try {
       healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
     } catch (err) {
-      serviceHelper.log('error', 'healthCheck', err.message);
+      serviceHelper.log('error', err.message);
     }
     if (healthCheckData instanceof Error) {
-      serviceHelper.log('error', 'healthCheck', `Ping service failed: ${service.name}`);
+      serviceHelper.log('error', `Ping service failed: ${service.name}`);
     } else {
-      serviceHelper.log('trace', 'healthCheck', `Ping service ok: ${service.name}`);
+      serviceHelper.log('trace', `Ping service ok: ${service.name}`);
       activeServices.push(healthCheckData.data);
       activeCount += 1;
     }
