@@ -24,8 +24,8 @@ RUN npm install --production
 
 RUN npm install pino-elasticsearch -g
 
-HEALTHCHECK --interval=12s --timeout=24s --start-period=60s \  
- CMD node lib/healthcheck.js
+#HEALTHCHECK --interval=12s --timeout=24s --start-period=60s \  
+# CMD node lib/healthcheck.js
 
 CMD [ "npm", "start" ]
 
