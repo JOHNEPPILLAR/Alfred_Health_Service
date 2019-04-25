@@ -10,11 +10,4 @@ services:
     ports:
       - "3982:3978"
     hostname: alfred_health_service
-    networks:
-      - alfred
-
-networks:
-
-  alfred:
-    name: alfred
-    driver: nat
+    network_mode: nat
