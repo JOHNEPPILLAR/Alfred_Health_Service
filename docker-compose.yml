@@ -9,8 +9,6 @@ services:
     restart: always
     ports:
       - "3982:3978"
-    extra_hosts:
-      - "alfred_elk_elasticsearch_1:192.168.1.4"
     hostname: alfred_health_service
     networks:
       - alfred
