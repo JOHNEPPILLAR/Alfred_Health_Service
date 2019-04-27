@@ -86,7 +86,7 @@ async function healthCheck(req, res, next) {
     {
       name: 'alfred_flowercare_data_collector_service',
       ip: '192.168.1.7',
-      port: 3984,
+      port: 3978,
     },
     {
       name: 'alfred_hls_service',
