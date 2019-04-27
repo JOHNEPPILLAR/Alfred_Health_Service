@@ -118,21 +118,6 @@ async function healthCheck(req, res, next) {
       ip: 'alfred_dyson_data_collector_service',
       port: 3978,
     },
-    {
-      name: 'alfred_elk_elasticsearch',
-      ip: '192.168.1.4',
-      port: 9200,
-    },
-    {
-      name: 'alfred_elk_logstash',
-      ip: '192.168.1.4',
-      port: 5000,
-    },
-    {
-      name: 'alfred_elk_kibana',
-      ip: '192.168.1.4',
-      port: 5601,
-    },
   ];
 
   let counter = 0;
