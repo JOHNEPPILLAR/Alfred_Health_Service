@@ -2,7 +2,7 @@
  * Import external libraries
  */
 const Skills = require('restify-router').Router;
-const elasticsearch = require('elasticsearch');
+const elasticsearch = require('@elastic/elasticsearch');
 const os = require('os');
 
 /**
@@ -41,7 +41,7 @@ function ping(req, res, next) {
   if (process.env.Environment === 'production') {
     try {
       const client = new elasticsearch.Client({
-        hosts: [process.env.ElasticSearch],
+        node: process.env.ElasticSearch,
       });
 
       const load = os.loadavg();
@@ -56,7 +56,7 @@ function ping(req, res, next) {
           hostname: os.hostname(),
           mem_free: os.freemem(),
           mem_total: os.totalmem(),
-          mem_percent: ((os.freemem() * 100) / os.totalmem()),
+          mem_percent: (os.freemem() * 100) / os.totalmem(),
           cpu: Math.min(Math.floor((load[0] * 100) / os.cpus().length), 100),
         },
       });
@@ -145,7 +145,9 @@ async function healthCheck(req, res, next) {
 
   let counter = 0;
   servicesToPing.forEach(async (service) => {
-    apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
+    apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${
+      process.env.ClientAccessKey
+    }`;
     serviceHelper.log('trace', `Calling: ${apiURL}`);
     try {
       healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);

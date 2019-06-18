@@ -23,6 +23,4 @@ RUN npm update \
 
 HEALTHCHECK --start-period=60s --interval=10s --timeout=10s --retries=6 CMD ["./healthcheck.sh"]
 
-CMD [ "npm", "start" ]
-
 EXPOSE 3982
