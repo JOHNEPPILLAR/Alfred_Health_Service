@@ -121,7 +121,7 @@ async function healthCheck(req, res, next) {
     {
       name: 'alfred_hls_service',
       ip: '192.168.1.7',
-      port: 3982,
+      port: 3980,
     },
     {
       name: 'alfred_scheduler_service',
