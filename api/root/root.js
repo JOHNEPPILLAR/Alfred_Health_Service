@@ -115,7 +115,7 @@ async function healthCheck(req, res, next) {
       serviceHelper.log('error', `Ping service failed: ${service.name}`);
     } else {
       serviceHelper.log('trace', `Ping service ok: ${service.name}`);
-      activeServices.push(healthCheckData.data);
+      activeServices.push(service.name);
       activeCount += 1;
     }
     counter += 1;
