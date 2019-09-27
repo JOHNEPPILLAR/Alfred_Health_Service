@@ -25,7 +25,7 @@ const skill = new Skills();
  *
  */
 async function ping(req, res, next) {
-  serviceHelper.ping(res, next, process.env.ServiceName);
+  serviceHelper.ping(res, next);
 }
 skill.get('/ping', ping);
 
