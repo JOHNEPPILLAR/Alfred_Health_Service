@@ -13,8 +13,6 @@
     "dateformat": "^3.0.3",
     "dotenv": "^8.1.0",
     "fs": "^0.0.2",
-    "ip": "^1.1.5",
-    "os": "^0.1.1",
     "pure-uuid": "^1.5.7",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
