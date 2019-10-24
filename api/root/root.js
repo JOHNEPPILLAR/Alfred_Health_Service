@@ -75,21 +75,21 @@ async function healthCheck(req, res, next) {
       ip: '192.168.1.7',
       port: 3980,
     },
-    {
-      name: 'alfred_scheduler_service',
-      ip: 'alfred_scheduler_service',
-      port: 3978,
-    },
+    //{
+    //  name: 'alfred_scheduler_service',
+    //  ip: 'alfred_scheduler_service',
+    //  port: 3978,
+    //},
     {
       name: 'alfred_lights_service',
       ip: 'alfred_lights_service',
       port: 3978,
     },
-    {
-      name: 'alfred_controller_service',
-      ip: '192.168.1.3',
-      port: 3981,
-    },
+    //{
+    //  name: 'alfred_controller_service',
+    //  ip: '192.168.1.3',
+    //  port: 3981,
+    //},
     {
       name: 'alfred_netatmo_data_collector_service',
       ip: 'alfred_netatmo_data_collector_service',
