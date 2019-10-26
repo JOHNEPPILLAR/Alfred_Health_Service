@@ -6,17 +6,17 @@ require('dotenv').config();
 const restify = require('restify');
 const fs = require('fs');
 const UUID = require('pure-uuid');
-const serviceHelper = require('alfred_helper');
+const serviceHelper = require('alfred-helper');
+const { version } = require('../../package.json');
 
-global.instanceTraceID = new UUID(4);
-global.callTraceID = null;
+global.APITraceID = '';
 
 /**
  * Restify server Init
  */
 const server = restify.createServer({
   name: process.env.ServiceName,
-  version: process.env.Version,
+  version,
   key: fs.readFileSync('./certs/server.key'),
   certificate: fs.readFileSync('./certs/server.crt'),
 });
@@ -46,9 +46,11 @@ server.use((req, res, next) => {
 });
 server.use((req, res, next) => {
   // Check for a trace id
-  if (typeof req.headers['trace-id'] === 'undefined') {
-    global.callTraceID = new UUID(4);
-  } // Generate new trace id
+  if (typeof req.headers['api-trace-id'] === 'undefined') {
+    global.APITraceID = new UUID(4);
+  } else {
+    global.APITraceID = req.headers['api-trace-id'];
+  }
 
   // Check for valid auth key
   if (req.query.clientaccesskey !== process.env.ClientAccessKey) {
