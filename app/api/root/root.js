@@ -124,7 +124,7 @@ async function healthCheck(req, res, next) {
         activeCount,
         activeServices,
       };
-      serviceHelper.sendResponse(res, true, returnJSON);
+      serviceHelper.sendResponse(res, 200, returnJSON);
       next();
     }
   });
