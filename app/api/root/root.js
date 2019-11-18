@@ -54,20 +54,22 @@ async function healthCheck(req, res, next) {
   serviceHelper.log('trace', 'Health check API called');
 
   const activeServices = [];
+  const slackMessageBody = {
+    username: 'Error notifier',
+    text: 'One or more services are off-line',
+    icon_emoji: ':bangbang:',
+    attachments: [],
+  };
 
   let apiURL;
   let healthCheckData;
   let activeCount = 0;
+  let inActiveCount = 0;
 
   const servicesToPing = [
     {
-      name: 'alfred_iot_battery_service',
-      ip: 'alfred_iot_battery_service',
-      port: 3978,
-    },
-    {
-      name: 'alfred_flowercare_data_collector_service',
-      ip: '192.168.1.7',
+      name: 'alfred_lights_service',
+      ip: 'alfred_lights_service',
       port: 3978,
     },
     {
@@ -75,20 +77,15 @@ async function healthCheck(req, res, next) {
       ip: '192.168.1.7',
       port: 3980,
     },
-    // {
-    //  name: 'alfred_scheduler_service',
-    //  ip: 'alfred_scheduler_service',
-    //  port: 3978,
-    // },
     {
-      name: 'alfred_lights_service',
-      ip: 'alfred_lights_service',
+      name: 'alfred_flowercare_data_collector_service',
+      ip: '192.168.1.7',
       port: 3978,
     },
     {
-      name: 'alfred_controller_service',
-      ip: '192.168.1.3',
-      port: 3981,
+      name: 'alfred_iot_battery_service',
+      ip: 'alfred_iot_battery_service',
+      port: 3978,
     },
     {
       name: 'alfred_netatmo_data_collector_service',
@@ -97,7 +94,22 @@ async function healthCheck(req, res, next) {
     },
     {
       name: 'alfred_dyson_data_collector_service',
-      ip: 'alfred_dyson_data_collector_service',
+      ip: 'aaalfred_dyson_data_collector_service',
+      port: 3978,
+    },
+    {
+      name: 'alfred_controller_service',
+      ip: '192.168.1.3',
+      port: 3981,
+    },
+    {
+      name: 'alfred_commute_service',
+      ip: '192.168.1.3',
+      port: 3978,
+    },
+    {
+      name: 'alfred_tp_link_service',
+      ip: '192.168.1.3',
       port: 3978,
     },
   ];
@@ -113,6 +125,24 @@ async function healthCheck(req, res, next) {
     }
     if (healthCheckData instanceof Error) {
       serviceHelper.log('error', `Ping service failed: ${service.name}`);
+      slackMessageBody.attachments.push(
+        {
+          color: '#ff0000',
+          fields: [
+            {
+              title: 'Environment',
+              value: 'Production',
+              short: true,
+            },
+            {
+              title: 'Service',
+              value: service.name,
+              short: true,
+            },
+          ],
+        },
+      );
+      inActiveCount += 1;
     } else {
       serviceHelper.log('trace', `Ping service ok: ${service.name}`);
       activeServices.push(service.name);
@@ -120,7 +150,18 @@ async function healthCheck(req, res, next) {
     }
     counter += 1;
     if (counter === servicesToPing.length) {
+      if (inActiveCount > 0) {
+        apiURL = process.env.SlackWebHook;
+        try {
+          const apiData = await serviceHelper.callAPIServicePut(apiURL, slackMessageBody);
+          if (apiData instanceof Error) serviceHelper.log('error', apiData);
+        } catch (err) {
+          serviceHelper.log('error', err.message);
+        }
+      }
+
       const returnJSON = {
+        inActiveCount,
         activeCount,
         activeServices,
       };

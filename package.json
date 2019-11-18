@@ -23,13 +23,13 @@
     "restify": "^8.4.0",
     "restify-router": "^0.5.1",
     "pino": "^5.13.6",
-    "pino-pretty": "^3.3.0",
+    "pino-pretty": "^3.4.0",
     "path": "^0.12.7"
   },
   "devDependencies": {
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.18.2",
-    "snyk": "^1.244.0"
+    "snyk": "^1.248.0"
   }
 }
