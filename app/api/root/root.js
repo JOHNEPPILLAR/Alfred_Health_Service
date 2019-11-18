@@ -6,6 +6,10 @@ const serviceHelper = require('alfred-helper');
 
 const skill = new Skills();
 
+const slackAPIURL = process.env.SlackWebHook;
+
+global.inActiveServices = [];
+
 /**
  * @api {get} /ping
  * @apiName ping
@@ -54,12 +58,6 @@ async function healthCheck(req, res, next) {
   serviceHelper.log('trace', 'Health check API called');
 
   const activeServices = [];
-  const slackMessageBody = {
-    username: 'Error notifier',
-    text: 'One or more services are off-line',
-    icon_emoji: ':bangbang:',
-    attachments: [],
-  };
 
   let apiURL;
   let healthCheckData;
@@ -125,41 +123,82 @@ async function healthCheck(req, res, next) {
     }
     if (healthCheckData instanceof Error) {
       serviceHelper.log('error', `Ping service failed: ${service.name}`);
-      slackMessageBody.attachments.push(
-        {
-          color: '#ff0000',
-          fields: [
+      inActiveCount += 1;
+
+      if (global.inActiveServices.indexOf(service.name) === -1) {
+        serviceHelper.log('info', `Service: ${service.name} is not working, notify slack`);
+        global.inActiveServices.push(service.name);
+        const slackMessageBody = {
+          username: 'Error notifier',
+          text: 'Service is off-line',
+          icon_emoji: ':bangbang:',
+          attachments: [
             {
-              title: 'Environment',
-              value: 'Production',
-              short: true,
-            },
-            {
-              title: 'Service',
-              value: service.name,
-              short: true,
+              color: '#ff0000',
+              fields: [
+                {
+                  title: 'Environment',
+                  value: 'Production',
+                  short: true,
+                },
+                {
+                  title: 'Service',
+                  value: service.name,
+                  short: true,
+                },
+              ],
             },
           ],
-        },
-      );
-      inActiveCount += 1;
+        };
+        try {
+          const apiData = await serviceHelper.callAPIServicePut(slackAPIURL, slackMessageBody);
+          if (apiData instanceof Error) serviceHelper.log('error', apiData);
+        } catch (err) {
+          serviceHelper.log('error', err.message);
+        }
+      } else {
+        serviceHelper.log('info', `Service: ${service.name} is still not working`);
+      }
     } else {
       serviceHelper.log('trace', `Ping service ok: ${service.name}`);
-      activeServices.push(service.name);
-      activeCount += 1;
-    }
-    counter += 1;
-    if (counter === servicesToPing.length) {
-      if (inActiveCount > 0) {
-        apiURL = process.env.SlackWebHook;
+      const alertIndex = global.inActiveServices.indexOf(service.name);
+      if (alertIndex > -1) {
+        serviceHelper.log('info', `Service: ${service.name} is now working, notify slack`);
+        global.inActiveServices.splice(alertIndex, 1);
+        const slackMessageBody = {
+          username: 'Error notifier',
+          text: 'Service is back on-line',
+          icon_emoji: ':smile:',
+          attachments: [
+            {
+              color: '#00FF00',
+              fields: [
+                {
+                  title: 'Environment',
+                  value: 'Production',
+                  short: true,
+                },
+                {
+                  title: 'Service',
+                  value: service.name,
+                  short: true,
+                },
+              ],
+            },
+          ],
+        };
         try {
-          const apiData = await serviceHelper.callAPIServicePut(apiURL, slackMessageBody);
+          const apiData = await serviceHelper.callAPIServicePut(slackAPIURL, slackMessageBody);
           if (apiData instanceof Error) serviceHelper.log('error', apiData);
         } catch (err) {
           serviceHelper.log('error', err.message);
         }
       }
-
+      activeServices.push(service.name);
+      activeCount += 1;
+    }
+    counter += 1;
+    if (counter === servicesToPing.length) {
       const returnJSON = {
         inActiveCount,
         activeCount,
