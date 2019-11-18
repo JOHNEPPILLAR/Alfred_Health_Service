@@ -92,7 +92,7 @@ async function healthCheck(req, res, next) {
     },
     {
       name: 'alfred_dyson_data_collector_service',
-      ip: 'aaalfred_dyson_data_collector_service',
+      ip: 'alfred_dyson_data_collector_service',
       port: 3978,
     },
     {
@@ -102,12 +102,12 @@ async function healthCheck(req, res, next) {
     },
     {
       name: 'alfred_commute_service',
-      ip: '192.168.1.3',
+      ip: 'alfred_commute_service',
       port: 3978,
     },
     {
       name: 'alfred_tp_link_service',
-      ip: '192.168.1.3',
+      ip: 'alfred_tp_link_service',
       port: 3978,
     },
   ];
