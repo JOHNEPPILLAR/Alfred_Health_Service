@@ -6,8 +6,6 @@ const serviceHelper = require('alfred-helper');
 
 const skill = new Skills();
 
-const slackAPIURL = process.env.SlackWebHook;
-
 global.inActiveServices = [];
 
 /**
@@ -97,7 +95,7 @@ async function healthCheck(req, res, next) {
     },
     {
       name: 'alfred_controller_service',
-      ip: '192.168.1.3',
+      ip: 'alfred_controller_service',
       port: 3981,
     },
     {
@@ -112,9 +110,31 @@ async function healthCheck(req, res, next) {
     },
   ];
 
+  serviceHelper.log('trace', 'Getting ClientAccessKey');
+  const ClientAccessKey = await serviceHelper.vaultSecret(process.env.ENVIRONMENT, 'ClientAccessKey');
+  if (ClientAccessKey instanceof Error) {
+    serviceHelper.log('error', 'Not able to get secret (ClientAccessKey) from vault');
+    serviceHelper.sendResponse(
+      res,
+      500,
+      new Error('There was a problem with the auth service'),
+    );
+    return;
+  }
+  const SlackWebHook = await serviceHelper.vaultSecret(process.env.ENVIRONMENT, 'SlackWebHook');
+  if (SlackWebHook instanceof Error) {
+    serviceHelper.log('error', 'Not able to get secret (SlackWebHook) from vault');
+    serviceHelper.sendResponse(
+      res,
+      500,
+      new Error('There was a problem with the auth service'),
+    );
+    return;
+  }
+
   let counter = 0;
   servicesToPing.forEach(async (service) => {
-    apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${process.env.ClientAccessKey}`;
+    apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${ClientAccessKey}`;
     serviceHelper.log('trace', `Calling: ${apiURL}`);
     try {
       healthCheckData = await serviceHelper.callAlfredServiceGet(apiURL);
@@ -151,7 +171,7 @@ async function healthCheck(req, res, next) {
           ],
         };
         try {
-          const apiData = await serviceHelper.callAPIServicePut(slackAPIURL, slackMessageBody);
+          const apiData = await serviceHelper.callAPIServicePut(SlackWebHook, slackMessageBody);
           if (apiData instanceof Error) serviceHelper.log('error', apiData);
         } catch (err) {
           serviceHelper.log('error', err.message);
@@ -188,7 +208,7 @@ async function healthCheck(req, res, next) {
           ],
         };
         try {
-          const apiData = await serviceHelper.callAPIServicePut(slackAPIURL, slackMessageBody);
+          const apiData = await serviceHelper.callAPIServicePut(SlackWebHook, slackMessageBody);
           if (apiData instanceof Error) serviceHelper.log('error', apiData);
         } catch (err) {
           serviceHelper.log('error', err.message);
