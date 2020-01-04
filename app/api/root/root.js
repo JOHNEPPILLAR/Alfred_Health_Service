@@ -133,7 +133,7 @@ async function healthCheck(req, res, next) {
   }
 
   let counter = 0;
-  servicesToPing.forEach(async (service) => {
+  servicesToPing.map(async (service) => {
     apiURL = `https://${service.ip}:${service.port}/ping?clientaccesskey=${ClientAccessKey}`;
     serviceHelper.log('trace', `Calling: ${apiURL}`);
     try {
