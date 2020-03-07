@@ -70,13 +70,13 @@ async function healthCheck(req, res, next) {
     },
     {
       name: 'alfred_hls_service',
-      ip: '192.168.1.7',
+      ip: '192.168.85.13',
       port: 3980,
     },
     {
       name: 'alfred_flowercare_data_collector_service',
-      ip: '192.168.1.7',
-      port: 3978,
+      ip: '192.168.85.13',
+      port: 3981,
     },
     {
       name: 'alfred_iot_battery_service',
